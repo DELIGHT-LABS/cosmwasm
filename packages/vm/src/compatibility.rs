@@ -11,22 +11,86 @@ use crate::static_analysis::{deserialize_wasm, ExportInfo};
 /// This should be updated when new imports are added
 const SUPPORTED_IMPORTS: &[&str] = &[
     "env.abort",
-    "env.db_read",
-    "env.db_write",
-    "env.db_remove",
-    "env.addr_validate",
-    "env.addr_canonicalize",
-    "env.addr_humanize",
-    "env.secp256k1_verify",
-    "env.secp256k1_recover_pubkey",
-    "env.ed25519_verify",
-    "env.ed25519_batch_verify",
-    "env.debug",
-    "env.query_chain",
-    #[cfg(feature = "iterator")]
-    "env.db_scan",
-    #[cfg(feature = "iterator")]
-    "env.db_next",
+    "env.action_data_size",
+    "env.assert_sha256",
+    "env.cancel_deferred",
+    "env.check_transaction_authorization",
+    "env.check_permission_authorization",
+    "env.current_receiver",
+    "env.current_time",
+    "env.db_find_i64",
+    "env.db_get_i64",
+    "env.db_idx256_find_primary",
+    "env.db_idx256_lowerbound",
+    "env.db_idx256_next",
+    "env.db_idx256_remove",
+    "env.db_idx256_store",
+    "env.db_idx256_update",
+    "env.db_idx64_find_primary",
+    "env.db_idx64_lowerbound",
+    "env.db_idx64_next",
+    "env.db_idx64_remove",
+    "env.db_idx64_store",
+    "env.db_idx64_update",
+    "env.db_idx_double_find_primary",
+    "env.db_idx_double_lowerbound",
+    "env.db_idx_double_next",
+    "env.db_idx_double_remove",
+    "env.db_idx_double_store",
+    "env.db_idx_double_update",
+    "env.db_end_i64",
+    "env.db_find_i64",
+    "env.db_get_i64",
+    "env.db_lowerbound_i64",
+    "env.db_next_i64",
+    "env.db_previous_i64",
+    "env.db_remove_i64",
+    "env.db_store_i64",
+    "env.db_update_i64",
+    "env.eosio_assert",
+    "env.eosio_exit",
+    "env.get_active_producers",
+    "env.has_auth",
+    "env.is_account",
+    "env.memcpy",
+    "env.memmove",
+    "env.memset",
+    "env.printdf",
+    "env.printi",
+    "env.printn",
+    "env.prints",
+    "env.prints_l",
+    "env.printui",
+    "env.printui128",
+    "env.read_action_data",
+    "env.require_auth",
+    "env.require_auth2",
+    "env.require_recipient",
+    "env.send_deferred",
+    "env.send_inline",
+    "env.set_privileged",
+    "env.set_proposed_producers",
+    "env.set_resource_limits",
+    "env.sha256",
+    "env.__unordtf2",
+    "env.__eqtf2",
+    "env.__multf3",
+    "env.__addtf3",
+    "env.__subtf3",
+    "env.__netf2",
+    "env.__fixunstfsi",
+    "env.__floatunsitf",
+    "env.__fixtfsi",
+    "env.__floatsitf",
+    "env.__extenddftf2",
+    "env.__extendsftf2",
+    "env.__divtf3",
+    "env.__letf2",
+    "env.__trunctfdf2",
+    "env.__getf2",
+    "env.__trunctfsf2",
+    "env.set_blockchain_parameters_packed",
+    "env.get_blockchain_parameters_packed"
 ];
 
 /// Lists all entry points we expect to be present when calling a contract.
@@ -34,11 +98,8 @@ const SUPPORTED_IMPORTS: &[&str] = &[
 /// The marker export interface_version_* is checked separately.
 /// This is unlikely to change much, must be frozen at 1.0 to avoid breaking existing contracts
 const REQUIRED_EXPORTS: &[&str] = &[
-    // IO
-    "allocate",
-    "deallocate",
     // Required entry points
-    "instantiate",
+    "apply",
 ];
 
 const INTERFACE_VERSION_PREFIX: &str = "interface_version_";
@@ -75,7 +136,7 @@ pub fn check_wasm(wasm_code: &[u8], available_capabilities: &HashSet<String>) ->
     let module = deserialize_wasm(wasm_code)?;
     check_wasm_tables(&module)?;
     check_wasm_memories(&module)?;
-    check_interface_version(&module)?;
+    // check_interface_version(&module)?;
     check_wasm_exports(&module)?;
     check_wasm_imports(&module, SUPPORTED_IMPORTS)?;
     check_wasm_capabilities(&module, available_capabilities)?;
@@ -103,9 +164,12 @@ fn check_wasm_tables(module: &Module) -> VmResult<()> {
                 }
                 Ok(())
             } else {
+                /*
                 Err(VmError::static_validation_err(
                     "Wasm contract must not have unbound table section",
                 ))
+                */
+                Ok(())
             }
         }
         _ => Err(VmError::static_validation_err(
